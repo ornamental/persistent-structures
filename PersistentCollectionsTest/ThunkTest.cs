@@ -1,31 +1,30 @@
-﻿using System;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using PersistentCollections;
+using System;
+using Xunit;
 
 namespace PersistentCollectionsTest
 {
-    [TestClass]
     public class ThunkTest
     {
-        [TestMethod]
+        [Fact]
         public void DeferredCalculationTest()
         {
             Thunk<int> thunk = Thunk<int>.Of(() => throw new Exception("Exception to throw upon calculation."));
-            Assert.ThrowsException<Exception>(() => thunk.Result);
+            Assert.Throws<Exception>(() => thunk.Result);
         }
 
-        [TestMethod]
+        [Fact]
         public void CalculationResultTest()
         {
             int expectedResult = 42;
             Thunk<int> thunk = Thunk<int>.Of(() => expectedResult);
-            Assert.AreEqual(expectedResult, thunk.Result);
+            Assert.Equal(expectedResult, thunk.Result);
         }
 
-        [TestMethod]
+        [Fact]
         public void AbsentCalculationTest()
         {
-            Assert.ThrowsException<ArgumentNullException>(() => Thunk<int>.Of(null));
+            Assert.Throws<ArgumentNullException>(() => Thunk<int>.Of(null));
         }
     }
 }

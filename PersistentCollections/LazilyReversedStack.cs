@@ -18,31 +18,20 @@ namespace PersistentCollections
             get;
         }
 
-        public IEnumerator<T> GetEnumerator()
-        {
-            return Result.GetEnumerator();
-        }
+        public IEnumerator<T> GetEnumerator() => Result.GetEnumerator();
 
-        public (T Item, IPersistentStack<T> Tail) Pop()
-        {
-            return Result.Pop();
-        }
+        public (T Item, IPersistentStack<T> Tail) Pop() => Result.Pop();
 
         [ExcludeFromCodeCoverage]
         public IPersistentStack<T> Push(T item)
         {
-            return Result.Push(item);
+            throw new InvalidOperationException("Not supported.");
         }
 
         [ExcludeFromCodeCoverage]
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            return GetEnumerator();
-        }
+        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
         private static IPersistentStack<T> Reverse(IPersistentStack<T> original)
-        {
-            return PersistentStack<T>.Of(original);
-        }
+            => PersistentStack<T>.Of(original);
     }
 }

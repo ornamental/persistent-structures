@@ -2,23 +2,22 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using PersistentCollections;
+using Xunit;
 
 namespace PersistentCollectionsTest
 {
-    [TestClass]
     public class PersistentQueueTest
     {
-        [DynamicData("EmptyQueues")]
-        [DataTestMethod]
+        [Theory]
+        [MemberData(nameof(EmptyQueues))]
         public void EmptyQueueTest(IPersistentQueue<int> empty)
         {
             CheckEmptyBehaviour(empty);
-            Assert.AreNotSame(empty, empty.Enqueue(1));
+            Assert.NotSame(empty, empty.Enqueue(1));
         }
 
-        [TestMethod]
+        [Fact]
         public void CreateQueueTest()
         {
             int count = 100;
@@ -29,20 +28,20 @@ namespace PersistentCollectionsTest
             int itemsLeft = count;
             foreach (int expectedItem in items)
             {
-                Assert.AreEqual(itemsLeft, queue.Count);
+                Assert.Equal(itemsLeft, queue.Count);
 
                 int head;
                 (head, queue) = queue.Dequeue();
                 itemsLeft--;
 
-                Assert.AreEqual(expectedItem, head);
+                Assert.Equal(expectedItem, head);
             }
 
             CheckEmptyBehaviour(queue);
         }
 
-        [DynamicData("EmptyQueues")]
-        [DataTestMethod]
+        [Theory]
+        [MemberData(nameof(EmptyQueues))]
         public void EnqueueDequeueTest(IPersistentQueue<int> empty)
         {
             int count = 100;
@@ -55,11 +54,11 @@ namespace PersistentCollectionsTest
                 int countBefore = queue.Count;
 
                 queue = queue.Enqueue(item);
-                Assert.AreEqual(countBefore + 1, queue.Count);
+                Assert.Equal(countBefore + 1, queue.Count);
 
                 (int head, IPersistentQueue<int> tail) = queue.Dequeue();
-                Assert.AreEqual(items.First(), head);
-                Assert.AreEqual(countBefore, tail.Count);
+                Assert.Equal(items.First(), head);
+                Assert.Equal(countBefore, tail.Count);
             }
 
             foreach (int item in items)
@@ -68,13 +67,13 @@ namespace PersistentCollectionsTest
 
                 int head;
                 (head, queue) = queue.Dequeue();
-                Assert.AreEqual(item, head);
+                Assert.Equal(item, head);
             }
 
             CheckEmptyBehaviour(queue);
         }
 
-        [TestMethod]
+        [Fact]
         public void EnumeratorTest()
         {
             int count = 100;
@@ -92,10 +91,10 @@ namespace PersistentCollectionsTest
             {
                 foreach (int item in items)
                 {
-                    Assert.IsTrue(enumerator.MoveNext());
-                    Assert.AreEqual(item, enumerator.Current);
+                    Assert.True(enumerator.MoveNext());
+                    Assert.Equal(item, enumerator.Current);
                 }
-                Assert.IsFalse(enumerator.MoveNext());
+                Assert.False(enumerator.MoveNext());
             }
         }
 
@@ -103,16 +102,17 @@ namespace PersistentCollectionsTest
         {
             get
             {
-                yield return new object[] { PersistentQueue<int>.Empty };
-                yield return new object[] { PersistentQueue<int>.Of(Enumerable.Empty<int>()) };
+                return TestUtilities.Singletons(
+                    PersistentQueue<int>.Empty,
+                    PersistentQueue<int>.Of(Enumerable.Empty<int>()));
             }
         }
 
         private static void CheckEmptyBehaviour<T>(IPersistentQueue<T> queue)
         {
-            Assert.AreEqual(0, queue.Count);
-            Assert.IsFalse(queue.GetEnumerator().MoveNext());
-            Assert.ThrowsException<InvalidOperationException>(() => queue.Dequeue());
+            Assert.Equal(0, queue.Count);
+            Assert.False(queue.GetEnumerator().MoveNext());
+            Assert.Throws<InvalidOperationException>(() => queue.Dequeue());
         }
     }
 }

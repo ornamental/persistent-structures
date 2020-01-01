@@ -14,12 +14,7 @@ namespace PersistentCollections
 
         private StackConcat(IPersistentStack<T> head, IPersistentStack<T> tail)
         {
-            if (_head is StackConcat<T>)
-            {
-                throw new ArgumentException("Head cannot be a concatenated stack.");
-            }
-
-            _head = head;
+            _head = head; // MUST NOT be a concatenated stack itself
             _tail = tail;
             Count = _head.Count + _tail.Count;
         }
@@ -27,7 +22,7 @@ namespace PersistentCollections
         public static StackConcat<T> Of(IPersistentStack<T> head, IPersistentStack<T> tail)
         {
             // an invariant must hold: the concatenated stack's head must not be a concatenated stack;
-            // this ensures that popping from the concatenated stack is O(1), though construction takes longer
+            // this ensures that popping from the concatenated stack is O(1), though construction takes O(log n)
             switch (head)
             {
                 case StackConcat<T> concatenatedHead:
@@ -42,10 +37,7 @@ namespace PersistentCollections
             get;
         }
 
-        public IEnumerator<T> GetEnumerator()
-        {
-            return Enumerable.Concat(_head, _tail).GetEnumerator();
-        }
+        public IEnumerator<T> GetEnumerator() => Enumerable.Concat(_head, _tail).GetEnumerator();
 
         public (T Item, IPersistentStack<T> Tail) Pop()
         {
@@ -63,13 +55,10 @@ namespace PersistentCollections
         [ExcludeFromCodeCoverage]
         public IPersistentStack<T> Push(T item)
         {
-            return new StackConcat<T>(_head.Push(item), _tail);
+            throw new InvalidOperationException("Not supported.");
         }
 
         [ExcludeFromCodeCoverage]
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            return GetEnumerator();
-        }
+        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
     }
 }

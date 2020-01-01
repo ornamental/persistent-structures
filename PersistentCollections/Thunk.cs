@@ -32,10 +32,7 @@ namespace PersistentCollections
             Thread.VolatileWrite(ref _calculation, calculation);
         }
 
-        public static Thunk<T> Of(Func<T> calculation)
-        {
-            return new Thunk<T>(calculation);
-        }
+        public static Thunk<T> Of(Func<T> calculation) => new Thunk<T>(calculation);
 
         public T Result
         {

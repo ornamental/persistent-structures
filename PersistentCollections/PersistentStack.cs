@@ -53,14 +53,8 @@ namespace PersistentCollections
             return (_head, _tail);
         }
 
-        public IPersistentStack<T> Push(T item)
-        {
-            return new PersistentStack<T>(item, this);
-        }
+        public IPersistentStack<T> Push(T item) => new PersistentStack<T>(item, this);
 
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            return GetEnumerator();
-        }
+        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
     }
 }

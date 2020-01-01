@@ -21,9 +21,7 @@ namespace PersistentCollections
         }
 
         public static PersistentQueue<T> Of(IEnumerable<T> items)
-        {
-            return new PersistentQueue<T>(PersistentStack<T>.Of(items.Reverse()), PersistentStack<T>.Empty);
-        }
+            => new PersistentQueue<T>(PersistentStack<T>.Of(items.Reverse()), PersistentStack<T>.Empty);
 
         public int Count => _head.Count + _tail.Count;
 
@@ -40,14 +38,9 @@ namespace PersistentCollections
         }
 
         public IEnumerator<T> GetEnumerator()
-        {
-            return Enumerable.Concat(_head, new LazilyReversedStack<T>(_tail)).GetEnumerator();
-        }
+            => Enumerable.Concat(_head, new LazilyReversedStack<T>(_tail)).GetEnumerator();
 
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            return GetEnumerator();
-        }
+        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
         private static PersistentQueue<T> CreateChecked(IPersistentStack<T> head, IPersistentStack<T> tail)
         {
