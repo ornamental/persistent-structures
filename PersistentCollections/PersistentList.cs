@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using PersistentCollections.Avl;
 
 namespace PersistentCollections
@@ -44,13 +45,13 @@ namespace PersistentCollections
             }
         }
 
-        private sealed class DeletionPointLocator : AvlTreeTraversal<WeightedAvlNode<T>, T>
+        private sealed class NodeLocator : AvlTreeTraversal<WeightedAvlNode<T>, T>
         {
             private int _index;
 
             private WeightedAvlNode<T> _current;
 
-            public DeletionPointLocator(int index, WeightedAvlNode<T> root)
+            public NodeLocator(int index, WeightedAvlNode<T> root)
             {
                 _index = index;
                 _current = root;
@@ -133,8 +134,10 @@ namespace PersistentCollections
                 throw new IndexOutOfRangeException();
             }
 
-            // DoInsert(..) cannot return null as InsertionPointLocator does not return Descent.NotFound
-            return new PersistentList<T>(DoInsert(item, new InsertionPointLocator(index, root)));
+            // DoInsert(..) cannot return null as InsertionPointLocator does not return Descent.NotFound;
+            // InsertionPointLocator always stops in Nil leaf, so an insertion is executed, never an update
+            return new PersistentList<T>(
+                DoInsertOrUpdate(item, _ => default, new InsertionPointLocator(index, root)));
         }
 
         public IPersistentList<T> RemoveAt(int index, out T removedValue)
@@ -144,41 +147,32 @@ namespace PersistentCollections
                 throw new IndexOutOfRangeException();
             }
 
-            DeletionPointLocator locator = new DeletionPointLocator(index, root);
-            // DoDelete(..) cannot return null as DeletionPointLocator does not return Descent.NotFound
+            NodeLocator locator = new NodeLocator(index, root);
+            // DoDelete(..) cannot return null as NodeLocator does not return Descent.NotFound
             WeightedAvlNode<T> node = DoDelete(locator);
 
             removedValue = locator.CurrentNode.Payload;
             return new PersistentList<T>(node);
         }
 
-        public IPersistentList<T> SetValue(int index, Func<T, T> update, out T oldValue)
+        public IPersistentList<T> Set(int index, Func<T, T> update, out T oldValue)
         {
             if (index < 0 || index >= Count)
             {
                 throw new IndexOutOfRangeException();
             }
 
-            return new PersistentList<T>(ChangeValue(index, root, update, out oldValue));
+            NodeLocator nodeLocator = new NodeLocator(index, root);
+            // DoInsertOrUpdate(..) cannot return null as NodeLocator does not return Descent.NotFound
+            // NodeLocator always finds a node to update, so insertion is never executed
+            WeightedAvlNode<T> newRoot = DoInsertOrUpdate(default(T), update, nodeLocator);
+
+            oldValue = nodeLocator.CurrentNode.Payload;
+            return new PersistentList<T>(newRoot);
         }
 
         public IEnumerator<T> GetEnumerator()
-        {
-            WeightedAvlNode<T> current = root;
-            Stack<WeightedAvlNode<T>> stack = new Stack<WeightedAvlNode<T>>(root.Height);
-            while (current.Height > 0 || stack.Count > 0)
-            {
-                while (current.Height > 0)
-                {
-                    stack.Push(current);
-                    current = current.Left;
-                }
-
-                current = stack.Pop();
-                yield return current.Payload;
-                current = current.Right;
-            }
-        }
+            => root.Tree().Select(n => n.Payload).GetEnumerator();
 
         IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
@@ -187,37 +181,5 @@ namespace PersistentCollections
         protected override WeightedAvlNode<T> NewNode(
             T payload, WeightedAvlNode<T> left, WeightedAvlNode<T> right)
                 => new WeightedAvlNode<T>(payload, left, right);
-
-        private WeightedAvlNode<T> ChangeValue(
-            int index, WeightedAvlNode<T> node, Func<T, T> update, out T oldValue)
-        {
-            WeightedAvlNode<T> left;
-            WeightedAvlNode<T> right;
-            T payload;
-
-            int leftWeight = node.Left.Weight;
-
-            if (index < leftWeight)
-            {
-                payload = node.Payload;
-                left = ChangeValue(index, node.Left, update, out oldValue);
-                right = node.Right;
-            }
-            else if (index > leftWeight)
-            {
-                payload = node.Payload;
-                left = node.Left;
-                right = ChangeValue(index - leftWeight - 1, node.Right, update, out oldValue);
-            }
-            else
-            {
-                oldValue = node.Payload;
-                payload = update(oldValue);
-                left = node.Left;
-                right = node.Right;
-            }
-
-            return new WeightedAvlNode<T>(payload, left, right);
-        }
     }
 }

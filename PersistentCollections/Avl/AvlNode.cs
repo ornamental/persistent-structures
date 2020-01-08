@@ -41,5 +41,23 @@ namespace PersistentCollections.Avl
         {
             get;
         }
+
+        public IEnumerable<AvlNode<N, P>> Tree()
+        {
+            AvlNode<N, P> current = this;
+            Stack<AvlNode<N, P>> stack = new Stack<AvlNode<N, P>>(Height);
+            while (current.Height > 0 || stack.Count > 0)
+            {
+                while (current.Height > 0)
+                {
+                    stack.Push(current);
+                    current = current.Left;
+                }
+
+                current = stack.Pop();
+                yield return current;
+                current = current.Right;
+            }
+        }
     }
 }

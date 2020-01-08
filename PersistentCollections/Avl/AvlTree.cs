@@ -36,10 +36,11 @@ namespace PersistentCollections.Avl
         protected abstract N NewNode(P payload, N left, N right);
 
         [return: MaybeNull]
-        protected N DoInsert(P payload, AvlTreeTraversal<N, P> insertionLeafLocator)
+        protected N DoInsertOrUpdate(
+            P payloadToInsert, Func<P, P> payloadUpdate, AvlTreeTraversal<N, P> nodeLocator)
         {
-            N currentNode = insertionLeafLocator.CurrentNode; // memorize the current nde before descending
-            Descent direction = insertionLeafLocator.Descend(); // descend: insertionLeafLocator.CurrentNode changes
+            N currentNode = nodeLocator.CurrentNode; // memorize the current node before descending
+            Descent direction = nodeLocator.Descend(); // descend: insertionLeafLocator.CurrentNode changes
 
             if (direction == Descent.NotFound)
             {
@@ -48,40 +49,49 @@ namespace PersistentCollections.Avl
 
             P value;
             N left;
-            N rigth;
+            N right;
 
             if (direction == Descent.Found)
             {
-                value = payload;
-                left = NilNode;
-                rigth = NilNode;
+                if (currentNode.IsNil) // insertion case
+                {
+                    value = payloadToInsert;
+                    left = NilNode;
+                    right = NilNode;
+                }
+                else // payload replacement case
+                {
+                    value = payloadUpdate(currentNode.Payload);
+                    left = currentNode.Left;
+                    right = currentNode.Right;
+                }
             }
             else
             {
                 value = currentNode.Payload; // preserve payload
-                N rebuiltSubtree = DoInsert(payload, insertionLeafLocator); // insert recursively
+                N rebuiltSubtree = DoInsertOrUpdate(payloadToInsert, payloadUpdate, nodeLocator);
                 if (rebuiltSubtree == null)
                 {
-                    return null; // propagate the 'insertion point not found' result up the stack
+                    return null; // propagate the 'insertion/update point not found' result up the stack
                 }
 
                 if (direction == Descent.Left)
                 {
                     left = rebuiltSubtree;
-                    rigth = currentNode.Right;
+                    right = currentNode.Right;
                 }
                 else // direction == Descent.Right
                 {
                     left = currentNode.Left;
-                    rigth = rebuiltSubtree;
+                    right = rebuiltSubtree;
                 }
             }
 
-            return Rebalance(value, left, rigth);
+            return Rebalance(value, left, right);
         }
 
         [return: MaybeNull]
-        protected N DoDelete([DisallowNull] AvlTreeTraversal<N, P> deletionPointLocator)
+        protected N DoDelete(AvlTreeTraversal<N, P> deletionPointLocator)
         {
             N currentNode = deletionPointLocator.CurrentNode;
             Descent direction = deletionPointLocator.Descend();

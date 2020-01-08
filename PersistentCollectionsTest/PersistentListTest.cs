@@ -110,9 +110,9 @@ namespace PersistentCollectionsTest
 
             for (int i = 0; i < count; i++)
             {
-                list = list.SetValue(i, j => j + 1, out int oldValue);
+                list = list.Set(i, j => j + 1, out int oldValue);
                 Assert.Equal(i, oldValue);
-                list2 = list2.SetValue(i, i + 1, out oldValue);
+                list2 = list2.Set(i, i + 1, out oldValue);
                 Assert.Equal(i, oldValue);
             }
 
@@ -126,8 +126,8 @@ namespace PersistentCollectionsTest
             const int count = 10;
 
             IPersistentList<int> list = PersistentList<int>.Of(new int[count]);
-            Assert.Throws<IndexOutOfRangeException>(() => list.RemoveAt(-1, out _));
-            Assert.Throws<IndexOutOfRangeException>(() => list.RemoveAt(count, out _));
+            Assert.Throws<IndexOutOfRangeException>(() => list.RemoveAt(-1));
+            Assert.Throws<IndexOutOfRangeException>(() => list.RemoveAt(count));
         }
 
         [Fact]
@@ -146,8 +146,8 @@ namespace PersistentCollectionsTest
             const int count = 10;
 
             IPersistentList<int> list = PersistentList<int>.Of(new int[count]);
-            Assert.Throws<IndexOutOfRangeException>(() => list.SetValue(-1, -1, out _));
-            Assert.Throws<IndexOutOfRangeException>(() => list.SetValue(count, -1, out _));
+            Assert.Throws<IndexOutOfRangeException>(() => list.Set(-1, -1));
+            Assert.Throws<IndexOutOfRangeException>(() => list.Set(count, -1));
         }
 
         public static IEnumerable<object[]> EmptyLists
@@ -202,7 +202,7 @@ namespace PersistentCollectionsTest
                 Assert.False(enumerator.MoveNext());
             }
             Assert.Throws<IndexOutOfRangeException>(() => empty[0]);
-            Assert.Throws<IndexOutOfRangeException>(() => empty.RemoveAt(0, out _));
+            Assert.Throws<IndexOutOfRangeException>(() => empty.RemoveAt(0));
         }
 
         private void AddRemoveAtTestImpl(InsertRemoveScenario scenario)
